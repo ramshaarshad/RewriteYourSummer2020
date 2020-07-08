@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-1.12.2.min.js"></script>
+        <script src="airtable.browser.js"></script>
+    </head>
+    <body>
+        <h1>RTC Onboarding</h1>
+        <div id="members"></div>
+
+        <hr/>
+        <button id='create'>Create</button>
+        <div id="created"></div>
+    </body>
+
+
+    <script>
+var Airtable = require('airtable');
+
+var base = new Airtable({ apiKey: 'ENTER API KEY' }).base('ENTER BASE KEY');
+
+var deleteMember = function(record) {
+    record.destroy(function(err) {
+        if (err) {
+            console.log('Error destroying ', recordId, err);
+        } else {
+            console.log('Destroyed ', record.getId());
+            $('div[data-record-id="'+record.getId()+'"]').remove();
+        }
+    });
+};
+
+var loadMembers = function() {
+    $('#members').empty();
+
+    base('TestUserDB').select({
+        sort: [
+            {field: 'user_last_name', direction: 'asc'}
+        ]
+    }).eachPage(function page(records, fetchNextPage) {
+        records.forEach(function(record) {
+            console.log('Retrieved ', record.get('user_last_name'));
+
+            var $memberInfo = $('<div>');
+            $memberInfo.append($('<h3>').text(record.get('user_last_name')));
+            $memberInfo.append($('<div>').text(record.get('user_first_name')));
+            $memberInfo.append($('<div>').text(record.get('Q_1')));
+            var x = $('<button>').text('Delete').click(function() {
+                deleteMember(record);
+            });
+            $memberInfo.append(x)
+            $memberInfo.attr('data-record-id', record.getId());
+
+            $('#members').append($memberInfo);
+        });
+
+        fetchNextPage();
+    }, function done(error) {
+        console.log(error);
+    });
+};
+
+$('#create').click(function(){
+    base('TestUserDB').create({
+        "user_first_name": "Corn",
+        "user_id": "8",
+        "user_last_name": "Dog",
+        "user_email": "corndog@gmail.com"
+    }, function(err, record) {
+        if (err) { console.log(err); return; }
+        loadMembers();
+    });
+});
+
+loadMembers();
+</script>
+</html>
