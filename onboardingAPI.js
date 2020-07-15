@@ -15,7 +15,7 @@ function String getCorrectAnswer(question) {
             });
         };
     } else {
-        return "Argument must be of type string";
+        throw "Argument must be of type string";
     }
 }
 
@@ -24,7 +24,7 @@ function boolean checkAnswer(question, answer) {
     if ((typeof question === 'string' || question instanceof String) && (typeof answer === 'string' || answer instanceof String)) {
         return getCorrectAnswer(question).equals(answer);
     } else {
-        return "Arguments must be of type string";
+        throw "Arguments must be of type string";
     }
 }
 
@@ -41,6 +41,6 @@ function double getProgress(userEmail, module) {
         });
         return (completedQuestions/totalQuestions)*100;//return a percentage
     } else {
-        return "Arguments must be of type string and of type number";
+        throw "Arguments must be of type string and of type number";
     }
 }
