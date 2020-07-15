@@ -39,7 +39,7 @@ function double getProgress(userEmail, module) {
                 completedQuestions = record.get('Completed Questions');
             });
         });
-        return completedQuestions/totalQuestions;
+        return (completedQuestions/totalQuestions)*100;//return a percentage
     } else {
         return "Arguments must be of type string and of type number";
     }
