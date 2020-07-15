@@ -30,5 +30,5 @@ function double getProgress(String userEmail, int module) {
             completedQuestions = record.get('Completed Questions');
         });
     });
-    return completedQuestions/totalQuestions;
+    return (completedQuestions/totalQuestions)*100;//return a percentage
 }
