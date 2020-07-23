@@ -48,9 +48,32 @@ async function getProgress(userEmail, module) {
                 } else {
                  output = record.get(module + '_progress');
                 }
-                console.log(output);
                 return output;
             });
         });
     }
 }
+
+//gets the progress for the module (or overall, if input == 0)
+async function getUser(userEmail){
+  if (typeof userEmail === 'string' || userEmail instanceof String) {
+        await base('TestUserDB').select({
+            filterByFormula: "{user_email}='" + userEmail + "'",
+        }).eachPage(function page(records, fetchNextPage) {
+            records.forEach(function(record) {
+                var outputs = [];
+                for (var i = 0; i < 6; i++) {
+                    var output;
+                    if (i == 0){
+                        output = record.get('totalProgress');
+                    } else {
+                        output = record.get(i + '_progress');
+                    }
+                    outputs.push(output);
+                }
+                return outputs;
+            });
+        });
+    }
+}
+
