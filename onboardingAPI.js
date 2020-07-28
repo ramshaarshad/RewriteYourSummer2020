@@ -31,8 +31,6 @@ async function getCorrectAnswer(question) {
                 return record.get('correct_ans');
             });
         });
-    } else {
-        throw "Expected: question";
     }
 }
 
@@ -46,8 +44,6 @@ async function getCorrectAnswer(question) {
 async function checkAnswer(question, answer) {
     if (validQuestion && (typeof answer === 'string' || answer instanceof String)) {
         return getCorrectAnswer(question).equals(answer);
-    } else {
-        throw "Expected: question, answer";
     }
 }
 
