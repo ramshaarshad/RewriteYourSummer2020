@@ -13,65 +13,97 @@
         <div id="created"></div>
     </body>
 
-
     <script>
 var Airtable = require('airtable');
 
-var base = new Airtable({ apiKey: 'ENTER API KEY' }).base('ENTER BASE KEY');
+var base = new Airtable({ apiKey: 'keybaIVrPE0rdFl0K' }).base('appVqAfmjqEb1mATc');
 
-var deleteMember = function(record) {
-    record.destroy(function(err) {
-        if (err) {
-            console.log('Error destroying ', recordId, err);
-        } else {
-            console.log('Destroyed ', record.getId());
-            $('div[data-record-id="'+record.getId()+'"]').remove();
-        }
-    });
-};
+const questions = ["1a", "1b", "1c", "2a", "2b", "2c", "3a", "3b", "3c", "4a", "4b", "4c", "4d", "5a", "5b"];
 
-var loadMembers = function() {
-    $('#members').empty();
+//returns whether the input is a valid question
+function validQuestion(question) {
+    return (typeof question === 'string' || question instanceof String) && questions.includes(question);
+}
 
-    base('TestUserDB').select({
-        sort: [
-            {field: 'user_last_name', direction: 'asc'}
-        ]
-    }).eachPage(function page(records, fetchNextPage) {
-        records.forEach(function(record) {
-            console.log('Retrieved ', record.get('user_last_name'));
-
-            var $memberInfo = $('<div>');
-            $memberInfo.append($('<h3>').text(record.get('user_last_name')));
-            $memberInfo.append($('<div>').text(record.get('user_first_name')));
-            $memberInfo.append($('<div>').text(record.get('Q_1')));
-            var x = $('<button>').text('Delete').click(function() {
-                deleteMember(record);
+//given the question, returns the correct answer
+async function getCorrectAnswer(question) {
+    if (validQuestion(question)) {
+        await base('QuestionDB').select({
+            filterByFormula: "{question}='" + question + "'",
+            maxRecords: 1,
+        }).eachPage(function page(records, fetchNextPage) {
+            records.forEach(function(record) {
+                console.log(question + ": " + record.get('correct_ans'));
+                return record.get('correct_ans');
             });
-            $memberInfo.append(x)
-            $memberInfo.attr('data-record-id', record.getId());
-
-            $('#members').append($memberInfo);
         });
+    } else {
+        throw "Expected: question";
+    }
+}
 
-        fetchNextPage();
-    }, function done(error) {
-        console.log(error);
-    });
-};
+//given the question and the user answer, return whether user answer was correct
+async function checkAnswer(question, answer) {
+    if (validQuestion && (typeof answer === 'string' || answer instanceof String)) {
+        return getCorrectAnswer(question).equals(answer);
+    } else {
+        throw "Expected: question, answer";
+    }
+}
 
-$('#create').click(function(){
-    base('TestUserDB').create({
-        "user_first_name": "Corn",
-        "user_id": "8",
-        "user_last_name": "Dog",
-        "user_email": "corndog@gmail.com"
-    }, function(err, record) {
-        if (err) { console.log(err); return; }
-        loadMembers();
-    });
-});
+//gets the progress for the module (or overall, if input == 0)
+async function getProgress(userEmail, module) {
+    if ((typeof userEmail === 'string' || userEmail instanceof String) && (typeof module === 'number' || module instanceof Number)) {
+        await base('TestUserDB').select({
+            filterByFormula: "{user_email}='" + userEmail + "'",
+        }).eachPage(function page(records, fetchNextPage) {
+            records.forEach(function(record) {
+                var output;
+                if (module == 0) {
+                    output = record.get('totalProgress');
+                } else {
+                 output = record.get(module + '_progress');
+                }
+                console.log(output);
+                return output;
+            });
+        });
+    } else {
+        throw "Arguments must be of type string and of type number";
+    }
+}
 
-loadMembers();
+//gets the progress for the module (or overall, if input == 0)
+async function getUser(userEmail){
+  if (typeof userEmail === 'string' || userEmail instanceof String) {
+        await base('TestUserDB').select({
+            filterByFormula: "{user_email}='" + userEmail + "'",
+        }).eachPage(function page(records, fetchNextPage) {
+            records.forEach(function(record) {
+                var outputs = [];
+                for (var i = 0; i < 6; i++) {
+                    var output;
+                    if (i == 0){
+                        output = record.get('totalProgress');
+                    } else {
+                        output = record.get(i + '_progress');
+                    }
+                    outputs.push(output);
+                }
+                console.log(outputs);
+                return outputs;
+            });
+        });
+    }
+}
+//for (var i = 0; i < questions.length; i++) {
+//    console.log("RETRIEVING " + questions[i]);
+//    getCorrectAnswer(questions[i]).then(answer => console.log("GOT: " + answer));
+//}
+for (var i = 0; i < 6; i++) {
+    console.log("Getting module progress " + i);
+    //getProgress("li.10011@buckeyemail.osu.edu", i).then(progress => console.log("GOT: " + progress));
+    }
+getUser("li.10011@buckeyemail.osu.edu").then(info => console.log("GOT: " + info[0]));
 </script>
 </html>

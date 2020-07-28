@@ -4,12 +4,22 @@ var base = new Airtable({ apiKey: 'ENTER API KEY' }).base('ENTER BASE KEY');
 
 const questions = ["1a", "1b", "1c", "2a", "2b", "2c", "3a", "3b", "3c", "4a", "4b", "4c", "4d", "5a", "5b"];
 
-//returns whether the input is a valid question
+/**
+ * This function returns whether the input is a valid question
+ * @param {String} a question
+ * @returns {boolean} whether the question is valid
+ * @private
+ */
 function validQuestion(question) {
     return (typeof question === 'string' || question instanceof String) && questions.includes(question);
 }
 
-//given the question, returns the correct answer
+/**
+ * This function gets the correct answer to the input question from the database.
+ * @param {String} a question
+ * @returns {String} the correct answer
+ * @private
+ */
 async function getCorrectAnswer(question) {
     if (validQuestion(question)) {
         await base('QuestionDB').select({
@@ -26,7 +36,13 @@ async function getCorrectAnswer(question) {
     }
 }
 
-//given the question and the user answer, return whether user answer was correct
+/**
+ * This function returns whether the user answer is correct given the question
+ * @param {String} a question
+ * @param {String} user's answer to the question
+ * @returns {boolean} whether the user's answer was correct
+ * @public
+ */
 async function checkAnswer(question, answer) {
     if (validQuestion && (typeof answer === 'string' || answer instanceof String)) {
         return getCorrectAnswer(question).equals(answer);
