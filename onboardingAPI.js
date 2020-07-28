@@ -51,7 +51,13 @@ async function checkAnswer(question, answer) {
     }
 }
 
-//gets the progress for the module (or overall, if input == 0)
+/**
+ * This function returns a user's progress, either overall or for a module.
+ * @param {String} user email
+ * @param {number} the module number [1, 5] (or 0, for total progress)
+ * @returns {number} the progress percentage (questions completed / total questions * 100)
+ * @public
+ */
 async function getProgress(userEmail, module) {
     if ((typeof userEmail === 'string' || userEmail instanceof String) && (typeof module === 'number' || module instanceof Number)) {
         await base('TestUserDB').select({
@@ -70,7 +76,12 @@ async function getProgress(userEmail, module) {
     }
 }
 
-//gets the progress for the module (or overall, if input == 0)
+/**
+ * This function returns all progress points of a user
+ * @param {String} user email
+ * @returns {Object} a dictionary of the user's progress for each module and in total
+ * @public
+ */
 async function getUser(userEmail){
   if (typeof userEmail === 'string' || userEmail instanceof String) {
         await base('TestUserDB').select({
