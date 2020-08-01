@@ -78,7 +78,7 @@ async function getProgress(userEmail, module) {
  * @returns {Object} a dictionary of the user's progress for each module and in total
  * @public
  */
-async function getUser(userEmail){
+async function getUserProgress(userEmail){
   if (typeof userEmail === 'string' || userEmail instanceof String) {
         await base('TestUserDB').select({
             filterByFormula: "{user_email}='" + userEmail + "'",
