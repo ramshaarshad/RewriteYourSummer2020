@@ -75,7 +75,7 @@ async function getProgress(userEmail, module) {
 /**
  * This function returns all progress points of a user
  * @param {String} user email
- * @returns {Object} a dictionary of the user's progress for each module and in total
+ * @returns {JSON} a JSON string of a dictionary of the user's progress for each module and in total
  * @public
  */
 async function getUserProgress(userEmail){
@@ -84,7 +84,7 @@ async function getUserProgress(userEmail){
             filterByFormula: "{user_email}='" + userEmail + "'",
         }).eachPage(function page(records, fetchNextPage) {
             records.forEach(function(record) {
-                var outputs = [];
+                var outputs = {};
                 for (var i = 0; i < 6; i++) {
                     var output;
                     if (i == 0){
@@ -92,9 +92,9 @@ async function getUserProgress(userEmail){
                     } else {
                         output = record.get(i + '_progress');
                     }
-                    outputs.push(output);
+                    outputs[i] = output
                 }
-                return outputs;
+                return JSON.stringify(outputs);
             });
         });
     }
