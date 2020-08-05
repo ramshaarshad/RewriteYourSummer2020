@@ -1,10 +1,6 @@
 import "./airtable.browser.js";
 
 var Airtable = require('airtable');
-Airtable.configure({
-    endpointUrl: 'https://api.airtable.com',
-    apiKey: 'YOUR_API_KEY'
-});
 var base = new Airtable({ apiKey: 'ENTER API KEY' }).base('ENTER BASE KEY');
 
 const questions = ["1a", "1b", "1c", "2a", "2b", "2c", "3a", "3b", "3c", "4a", "4b", "4c", "4d", "5a", "5b"];
@@ -28,18 +24,36 @@ function validQuestion(question) {
 async function getCorrectAnswer(question) {
     try {
         if (validQuestion(question)) {
-            await base('QuestionDB').select({
+            const records = await base('Questions').select({
                 filterByFormula: "{question}='" + question + "'",
                 maxRecords: 1,
-            }).eachPage(function page(records, fetchNextPage) {
-                records.forEach(function(record) {
-                    console.log(question + ": " + record.get('correct_ans'));
-                    return record.get('correct_ans');
-                });
-            });
+            }).firstPage();
+            const record = records[0];
+            return record.get('correct_ans');
         }
     } catch (err) {
         console.log(err);
+    }
+}
+
+/**
+ *  This function returns a user's attempts for a question.
+ *  @param {String} user email
+ *  @param {String} question ID
+ *  @returns {number} the number of attempts
+ *  @public
+ */
+async function getAttempts(userEmail, question) {
+    try {
+        if ((typeof userEmail === 'string' || userEmail instanceof String) && (typeof question === 'number' || question instanceof Number)) {
+            const records = await base('Users').select({
+                filterByFormula: "{user_email}='" + userEmail + "'",
+            }).firstPage();
+            const record = records[0];
+            return record.get(question + ' attempts');
+        }
+    } catch (err) {
+        console.log(err); 
     }
 }
 
@@ -56,21 +70,21 @@ async function checkAnswer(question, answer) {
     }
 }
 
+/**
+ * This function returns the record ID of a user.
+ */
 async function getRecordID(userEmail) {
   try {
         if (typeof userEmail === 'string' || userEmail instanceof String) {
-              await base('TestUserDB').select({
+              const records = await base('Users').select({
                   filterByFormula: "{user_email}='" + userEmail + "'",
-              }).eachPage(function page(records, fetchNextPage) {
-                  records.forEach(function(record) {
-                    return record.id;
-                  });
-              });
+              }).firstPage();
+              const record = records[0];
+              return record.getId();
           }
     } catch (err) {
         console.log(err);
     }
-
 }  
    
 /* *
@@ -82,14 +96,14 @@ async function getRecordID(userEmail) {
  */
 async function updateCompletion(userEmail, question, update) {
     const id = await getRecordID(userEmail);
-    base('TestUserDB').update(id, {
-        answer : update
+    base('Users').update(id, {
+        question : update
     }, function(err, record) {
         if (err) {
             console.error(err);
             return;
         }
-        console.log(record.get('3c'));
+        console.log(record.get(question));
     });  
 }  
    
@@ -101,21 +115,19 @@ async function updateCompletion(userEmail, question, update) {
  *  @public
  */
 async function getProgress(userEmail, module) {
-  }  try {
+    try {
         if ((typeof userEmail === 'string' || userEmail instanceof String) && (typeof module === 'number' || module instanceof Number)) {
-            await base('TestUserDB').select({
+            const records = await base('Users').select({
                 filterByFormula: "{user_email}='" + userEmail + "'",
-            }).eachPage(function page(records, fetchNextPage) {
-                records.forEach(function(record) {
-                    var output;
-                    if (module == 0) {
-                        output = record.get('totalProgress');
-                    } else {
-                     output = record.get(module + '_progress');
-                    }
-                    return output;
-                });
-            });
+            }).firstPage();
+            const record = records[0];
+            var output;
+            if (module == 0) {
+                output = record.get('totalProgress');
+            } else {
+             output = record.get(module + '_progress');
+            }
+            return output;
         }
     } catch (err) {
         console.log(err); 
@@ -131,26 +143,43 @@ async function getProgress(userEmail, module) {
 async function getUserProgress(userEmail){
     try {
         if (typeof userEmail === 'string' || userEmail instanceof String) {
-              await base('TestUserDB').select({
+              const records = await base('Users').select({
                   filterByFormula: "{user_email}='" + userEmail + "'",
-              }).eachPage(function page(records, fetchNextPage) {
-                  records.forEach(function(record) {
-                      var outputs = {};
-                      for (var i = 0; i < 6; i++) {
-                          var output;
-                          if (i == 0){
-                              output = record.get('totalProgress');
-                          } else {
-                              output = record.get(i + '_progress');
-                          }
-                          outputs[i] = output
-                      }
-                      return JSON.stringify(outputs);
-                  });
-              });
+              }).firstPage();
+              const record = records[0];
+              var outputs = {};
+              for (var i = 0; i < 6; i++) {
+                  var output;
+                  if (i == 0){
+                      output = record.get('totalProgress');
+                  } else {
+                      output = record.get(i + '_progress');
+                  }
+                  outputs[i] = output
+              }
+              return JSON.stringify(outputs);
           }
     } catch (err) {
         console.log(err);
     }
 }
 
+async function addUser(userEmail, firstName, lastName) {
+    base('Users').create({
+        "user_email": userEmail,
+        "user_first_name": firstName,
+        "user_last_name": lastName
+       }, function(err, record) {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        //console.log(record.getId());
+    });
+}
+
+async function addUsers(userEmails, firstNames, lastNames) {
+    for (var i = 0; i < userEmails.length; i++) {
+        addUser(userEmails[i], firstNames[i], lastNames[i]);
+    }
+}
