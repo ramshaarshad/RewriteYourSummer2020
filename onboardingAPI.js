@@ -37,27 +37,6 @@ async function getCorrectAnswer(question) {
 }
 
 /**
- *  This function returns a user's attempts for a question.
- *  @param {String} user email
- *  @param {String} question ID
- *  @returns {number} the number of attempts
- *  @public
- */
-async function getAttempts(userEmail, question) {
-    try {
-        if ((typeof userEmail === 'string' || userEmail instanceof String) && (typeof question === 'number' || question instanceof Number)) {
-            const records = await base('Users').select({
-                filterByFormula: "{user_email}='" + userEmail + "'",
-            }).firstPage();
-            const record = records[0];
-            return record.get(question + ' attempts');
-        }
-    } catch (err) {
-        console.log(err); 
-    }
-}
-
-/**
  * This function returns whether the user answer is correct given the question
  * @param {String} a question
  * @param {String} user's answer to the question
@@ -97,7 +76,7 @@ async function getRecordID(userEmail) {
 async function updateCompletion(userEmail, question, update) {
     const id = await getRecordID(userEmail);
     base('Users').update(id, {
-        question : update
+        [question] : update
     }, function(err, record) {
         if (err) {
             console.error(err);
